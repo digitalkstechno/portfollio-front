@@ -1,0 +1,459 @@
+@import 'tailwindcss';
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cardIn {
+  0% { opacity: 0; transform: translateY(10px) scale(0.98); }
+  60% { opacity: 1; transform: translateY(0) scale(1.008); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ============ CARD ACTIONS ============ */
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.app-links {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-app {
+  flex: 1;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--dark) 0%, var(--gray-700) 100%);
+  color: var(--white);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-app:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.btn-app:active {
+  transform: translateY(0);
+}
+
+/* ============ BUTTONS ============ */
+.btn-primary {
+  width: 100%;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: var(--white);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.btn-share {
+  width: 100%;
+  padding: 12px 20px;
+  background: var(--gray-100);
+  color: var(--primary);
+  border: 2px solid var(--gray-300);
+  border-radius: var(--border-radius-md);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-share:hover {
+  background: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.btn-share:active {
+  transform: translateY(0);
+}
+
+/* ============ MODAL ============ */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+  background: var(--white);
+  padding: 40px;
+  border-radius: var(--border-radius-xl);
+  max-width: 500px;
+  width: 100%;
+  box-shadow: var(--shadow-2xl);
+  animation: slideUp 0.3s ease-out;
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--gray-200);
+}
+
+.modal-header h3 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: var(--transition);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-md);
+}
+
+.modal-close:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.share-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+}
+
+.share-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.share-icon {
+  font-size: 28px;
+}
+
+.share-btn.whatsapp {
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+}
+
+.share-btn.facebook {
+  background: linear-gradient(135deg, #1877f2 0%, #0c63d4 100%);
+}
+
+.share-btn.twitter {
+  background: linear-gradient(135deg, #1da1f2 0%, #0c85d0 100%);
+}
+
+.share-btn.linkedin {
+  background: linear-gradient(135deg, #0077b5 0%, #005582 100%);
+}
+
+.share-btn.telegram {
+  background: linear-gradient(135deg, #0088cc 0%, #006699 100%);
+}
+
+.share-btn.copy {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+}
+
+.share-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.share-btn:active {
+  transform: translateY(-2px);
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .container {
+    padding: 30px 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pin-container {
+    padding: 40px 30px;
+  }
+
+  .pin-container h1 {
+    font-size: 28px;
+  }
+
+  .pin-input {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+
+  .navbar {
+    padding: 12px 16px;
+  }
+
+  .nav-content {
+    padding: 0 4px;
+  }
+
+  .nav-brand {
+    font-size: 18px;
+    gap: 8px;
+  }
+
+  .brand-icon {
+    font-size: 24px;
+  }
+
+  .logout-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  .container {
+    padding: 20px 16px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    gap: 8px;
+  }
+
+  .tab-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .card-content {
+    padding: 18px;
+  }
+
+  .card-title {
+    font-size: 16px;
+  }
+
+  .card-desc {
+    font-size: 13px;
+  }
+
+  .modal-content {
+    padding: 30px 20px;
+  }
+
+  .share-options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .pin-container {
+    padding: 30px 20px;
+  }
+
+  .pin-container h1 {
+    font-size: 24px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .pin-input {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+
+  .navbar {
+    padding: 12px 12px;
+  }
+
+  .nav-brand {
+    font-size: 16px;
+  }
+
+  .nav-content {
+    gap: 8px;
+  }
+
+  .logo {
+    margin-bottom: 20px;
+  }
+
+  .logo svg {
+    width: 60px;
+    height: 60px;
+  }
+
+  .container {
+    padding: 16px 12px;
+  }
+
+  .grid {
+    gap: 16px;
+  }
+
+  .card-image-wrapper {
+    height: 160px;
+  }
+
+  .card-content {
+    padding: 16px;
+  }
+
+  .modal-content {
+    padding: 24px 16px;
+  }
+
+  .modal-header h3 {
+    font-size: 20px;
+  }
+
+  .share-options {
+    grid-template-columns: 1fr;
+  }
+
+  .share-btn {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 16px;
+  }
+
+  .share-icon {
+    font-size: 24px;
+  }
+}
+
+/* ============ ACCESSIBILITY ============ */
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============ PRINT ============ */
+@media print {
+  .navbar,
+  .logout-btn,
+  .btn-primary,
+  .btn-share,
+  .modal-overlay {
+    display: none;
+  }
+}
+
+/* ============ DARK MODE SUPPORT ============ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --gray-900: #f3f4f6;
+    --gray-800: #e5e7eb;
+    --gray-700: #d1d5db;
+    --gray-600: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-400: #4b5563;
+    --gray-300: #374151;
+    --gray-200: #1f2937;
+    --gray-100: #111827;
+    --gray-50: #030712;
+    --white: #1a1a2e;
+  }
+
+  body {
+    background: var(--gray-50);
+    color: var(--gray-50);
+  }
+
+  .pin-container,
+  .card,
+  .modal-content {
+    background: var(--white);
+    color: var(--gray-50);
+  }
+
+  .tab-btn {
+    background: var(--white);
+    border-color: var(--gray-300);
+  }
+}
