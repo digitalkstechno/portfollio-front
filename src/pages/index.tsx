@@ -529,7 +529,7 @@ const toggleCredentials = (id: string) => {
                 }
                 title={`Open ${item.title}`}
               >
-                {type === "software" ? "Download" : "View"}
+                {type === "software" ? "View" : "View"}
               </button>
             )}
             <button
