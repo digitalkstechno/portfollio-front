@@ -24,6 +24,7 @@ import {
   FaTwitter,
   FaLinkedin,
   FaTelegramPlane,
+  FaFigma,
 } from "react-icons/fa";
 
 type Project = {
@@ -33,6 +34,7 @@ type Project = {
   image: string;
   description: string;
   language: string;
+  type?: "ecommerce" | "informative";
   credentials?: Array<{
     role: string;
     email: string;
@@ -80,6 +82,14 @@ type MarketingClient = {
   image: string;
 };
 
+type FigmaItem = {
+  _id: string;
+  title?: string | null;
+  link: string;
+  image?: string | null;
+  type?: "application" | "web" | "saas-dashboard";
+};
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 const IMAGE_BASE = process.env.NEXT_PUBLIC_IMAGE_BASE;
 
@@ -105,6 +115,11 @@ export default function Home() {
   const [marketingClients, setMarketingClients] = useState<MarketingClient[]>(
     [],
   );
+  const [figmaItems, setFigmaItems] = useState<FigmaItem[]>([]);
+  const [figmaType, setFigmaType] = useState<"application" | "web" | "saas-dashboard">("application");
+  const [websiteType, setWebsiteType] = useState<"ecommerce" | "informative">(
+    "ecommerce"
+  );
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(
     new Set(),
   );
@@ -127,7 +142,7 @@ const [visibleCredentials, setVisibleCredentials] = useState<Set<string>>(new Se
     try {
       setIsLoadingData(true);
       setDataError("");
-      const [projectsRes, appsRes, softwareRes, cardsRes, clientsRes] =
+      const [projectsRes, appsRes, softwareRes, cardsRes, clientsRes, figmaRes] =
         await Promise.all([
           axios.get(`${API_BASE}/projects`, { timeout: 10000 }).catch((err) => {
             console.error("Projects API Error:", err);
@@ -155,13 +170,19 @@ const [visibleCredentials, setVisibleCredentials] = useState<Set<string>>(new Se
               console.error("Marketing Clients API Error:", err);
               throw new Error("Failed to load marketing clients");
             }),
-       
+          axios
+            .get(`${API_BASE}/figma-designs`, { timeout: 10000 })
+            .catch((err) => {
+              console.error("Figma API Error:", err);
+              throw new Error("Failed to load figma designs");
+            }),
         ]);
       setProjects(projectsRes.data.data || []);
       setMobileApps(appsRes.data.data || []);
       setSoftware(softwareRes.data.data || []);
       setDigitalCards(cardsRes.data.data || []);
       setMarketingClients(clientsRes.data.data || []);
+      setFigmaItems(figmaRes.data.data || []);
     } catch (error: unknown) {
       const errorMsg =
         error instanceof Error ? error.message : "Error loading data";
@@ -286,6 +307,14 @@ const toggleCredentials = (id: string) => {
         </span>
       ),
     },
+    {
+      key: "figma-designs",
+      label: (
+        <span className="flex items-center gap-2">
+          <FaFigma /> Figma
+        </span>
+      ),
+    },
   ];
 
   const handleShare = (
@@ -295,7 +324,8 @@ const toggleCredentials = (id: string) => {
       | "mobile-app"
       | "software"
       | "digital-card"
-      | "marketing-clients",
+      | "marketing-clients"
+      | "figma-designs",
   ) => {
     setShareItem(item);
     setShareType(type);
@@ -351,7 +381,8 @@ const toggleCredentials = (id: string) => {
     | MobileApp
     | Software
     | DigitalCard
-    | MarketingClient;
+    | MarketingClient
+    | FigmaItem;
   const renderCard = (
     item: CardItem,
     type:
@@ -825,9 +856,36 @@ const toggleCredentials = (id: string) => {
               <div key={activeTab} className="animate-[fadeIn_0.35s_ease-out]">
                 {activeTab === "projects" && (
                   <div className="w-full">
+                    <div className="flex gap-2 mb-4">
+                      <button
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          websiteType === "ecommerce"
+                            ? "bg-gray-900 text-white"
+                            : "bg-white border border-gray-300 text-gray-700"
+                        }`}
+                        onClick={() => setWebsiteType("ecommerce")}
+                      >
+                        Ecommerce Website
+                      </button>
+                      <button
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          websiteType === "informative"
+                            ? "bg-gray-900 text-white"
+                            : "bg-white border border-gray-300 text-gray-700"
+                        }`}
+                        onClick={() => setWebsiteType("informative")}
+                      >
+                        Informative Website
+                      </button>
+                    </div>
                     {projects.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-                        {projects.map((p) => renderCard(p, "projects"))}
+                        {projects
+                          .filter((p) => {
+                            if (!p.type) return true;
+                            return p.type === websiteType;
+                          })
+                          .map((p) => renderCard(p, "projects"))}
                       </div>
                     ) : (
                       <div className="text-center py-20 text-gray-600">
@@ -898,6 +956,90 @@ const toggleCredentials = (id: string) => {
                         <p className="text-lg font-medium">
                           No marketing clients found
                         </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === "figma-designs" && (
+                  <div className="w-full">
+                    <div className="flex gap-2 mb-4">
+                      <button
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          figmaType === "application"
+                            ? "bg-gray-900 text-white"
+                            : "bg-white border border-gray-300 text-gray-700"
+                        }`}
+                        onClick={() => setFigmaType("application")}
+                      >
+                        Application
+                      </button>
+                      <button
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          figmaType === "web"
+                            ? "bg-gray-900 text-white"
+                            : "bg-white border border-gray-300 text-gray-700"
+                        }`}
+                        onClick={() => setFigmaType("web")}
+                      >
+                        Web
+                      </button>
+                      <button
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          figmaType === "saas-dashboard"
+                            ? "bg-gray-900 text-white"
+                            : "bg-white border border-gray-300 text-gray-700"
+                        }`}
+                        onClick={() => setFigmaType("saas-dashboard")}
+                      >
+                        SaaS Dashboard
+                      </button>
+                    </div>
+                    {figmaItems.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+                        {figmaItems
+                          .filter((fg) => {
+                            if (!fg.type) return true;
+                            return fg.type === figmaType;
+                          })
+                          .map((fg) => (
+                          <div
+                            key={fg._id}
+                            className="bg-white/70 backdrop-blur-md rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 flex flex-col border border-white/30 min-h-[350px]"
+                          >
+                            {fg.image && (
+                              <div className="w-full h-56 bg-white flex items-center justify-center">
+                                <img
+                                  src={`${IMAGE_BASE}${fg.image}`}
+                                  alt={fg.title || "Figma Design"}
+                                  className="w-full h-full object-contain transition-transform duration-300 hover:scale-105 p-2"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display =
+                                      "none";
+                                  }}
+                                />
+                              </div>
+                            )}
+                            <div className="p-6 flex flex-col gap-3 flex-1">
+                              <h3 className="text-xl font-bold text-gray-900 leading-tight">
+                                {fg.title || "Figma Design"}
+                              </h3>
+                              <div className="flex gap-2 mt-2">
+                                <button
+                                  className="flex-1 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all bg-gradient-to-b from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 shadow-md"
+                                  onClick={() => window.open(fg.link, "_blank")}
+                                  title="Open Figma"
+                                >
+                                  Open Figma
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-20 text-gray-600">
+                        <p className="text-lg font-medium">No Figma designs found</p>
                       </div>
                     )}
                   </div>
