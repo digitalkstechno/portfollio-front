@@ -2,6 +2,7 @@ import Head from "next/head";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
+import { useToast } from "@/context/ToastContext";
 import {
   FiPhone,
   FiMail,
@@ -84,6 +85,7 @@ const IMAGE_BASE = process.env.NEXT_PUBLIC_IMAGE_BASE;
 
 export default function Home() {
   const { isUnlocked, login, logout, isLoading: authLoading } = useAuth();
+  const { showToast } = useToast();
   const [pinValues, setPinValues] = useState<string[]>(["", "", "", ""]);
   const [pinError, setPinError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -140,7 +142,7 @@ const [visibleCredentials, setVisibleCredentials] = useState<Set<string>>(new Se
           axios.get(`${API_BASE}/software`, { timeout: 10000 }).catch((err) => {
             console.error("Software API Error:", err);
             throw new Error("Failed to load software");
-          }),
+          }), 
           axios
             .get(`${API_BASE}/digital-cards`, { timeout: 10000 })
             .catch((err) => {
@@ -206,6 +208,7 @@ const [visibleCredentials, setVisibleCredentials] = useState<Set<string>>(new Se
       setIsSubmitting(true);
       setPinError("");
       await login(pin);
+      showToast("PIN correct. Unlocked successfully.", { type: "success" });
     } catch (error: unknown) {
       const msg =
         error instanceof Error
@@ -225,6 +228,7 @@ const [visibleCredentials, setVisibleCredentials] = useState<Set<string>>(new Se
     logout();
     setPinValues(["", "", "", ""]);
     setPinError("");
+    showToast("Logged out.", { type: "info" });
   };
 
   const togglePasswordVisibility = (credId: string) => {
@@ -770,7 +774,7 @@ const toggleCredentials = (id: string) => {
 
               {/* Right Section - Logout */}
               <button
-                className="bg-gradient-to-b from-gray-900 to-gray-800 text-white border-2 border-white/30 px-4 py-1.5 rounded-lg cursor-pointer font-semibold text-sm transition-all hover:bg-white hover:text-gray-900 hover:border-white hover:-translate-y-0.5 active:translate-y-0"
+                className="bg-gradient-to-b from-gray-900 to-gray-800 text-white border-2 border-white/30 px-4 py-1.5 rounded-lg cursor-pointer font-semibold text-sm transition-all hover:bg-white hover:text-white-900 hover:border-white hover:-translate-y-0.5 active:translate-y-0"
                 onClick={handleLogout}
                 title="Logout"
               >
