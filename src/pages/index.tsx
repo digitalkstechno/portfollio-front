@@ -105,7 +105,7 @@ export default function Home() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareItem, setShareItem] = useState<CardItem | null>(null);
   const [shareType, setShareType] = useState<
-    "projects" | "mobile-app" | "software" | "digital-card" | "marketing-clients" | null
+    "projects" | "mobile-app" | "software" | "digital-card" | "marketing-clients" | "figma-designs" | null
   >(null);
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -347,8 +347,8 @@ const toggleCredentials = (id: string) => {
       alert("Invalid URL");
       return;
     }
-    const title = shareItem.title || "";
-    const desc = shareItem.description || "";
+    const title = (shareItem as any).title || "";
+    const desc = (shareItem as any).description || "";
     const encodedUrl = encodeURIComponent(url);
     const message = `Check this out: ${title}\n\n${desc ? desc + "\n\n" : ""}${url}`;
     const encodedMsg = encodeURIComponent(message);
@@ -381,8 +381,7 @@ const toggleCredentials = (id: string) => {
     | MobileApp
     | Software
     | DigitalCard
-    | MarketingClient
-    | FigmaItem;
+    | MarketingClient;
   const renderCard = (
     item: CardItem,
     type:
@@ -408,7 +407,7 @@ const toggleCredentials = (id: string) => {
           <div className="w-full h-56 bg-white flex items-center justify-center">
             <img
               src={`${IMAGE_BASE}${item.image}`}
-              alt={item.title}
+              alt={(item as any).title || ""}
               className="w-full h-full object-contain transition-transform duration-300 hover:scale-105 p-2"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = "none";
