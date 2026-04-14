@@ -117,9 +117,7 @@ export default function Home() {
   );
   const [figmaItems, setFigmaItems] = useState<FigmaItem[]>([]);
   const [figmaType, setFigmaType] = useState<"application" | "web" | "saas-dashboard">("application");
-  const [websiteType, setWebsiteType] = useState<"ecommerce" | "informative">(
-    "ecommerce"
-  );
+  const [websiteType, setWebsiteType] = useState<"ecommerce" | "informative" | "innovation">("ecommerce");
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(
     new Set(),
   );
@@ -876,14 +874,21 @@ const toggleCredentials = (id: string) => {
                       >
                         Informative Website
                       </button>
+                      <button
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          websiteType === "innovation"
+                            ? "bg-gray-900 text-white"
+                            : "bg-white border border-gray-300 text-gray-700"
+                        }`}
+                        onClick={() => setWebsiteType("innovation")}
+                      >
+                        Innovation Website
+                      </button>
                     </div>
                     {projects.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
                         {projects
-                          .filter((p) => {
-                            if (!p.type) return true;
-                            return p.type === websiteType;
-                          })
+                          .filter((p) => p.type === websiteType)
                           .map((p) => renderCard(p, "projects"))}
                       </div>
                     ) : (
