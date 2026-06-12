@@ -11,7 +11,7 @@ import {
   FiCpu,
   FiCreditCard,
   FiUsers,
-    FiEye,
+  FiEye,
   FiEyeOff,
   FiChevronDown,
   FiChevronUp,
@@ -91,7 +91,15 @@ type FigmaItem = {
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
-const IMAGE_BASE = process.env.NEXT_PUBLIC_IMAGE_BASE;
+const IMAGE_BASE = process.env.NEXT_PUBLIC_IMAGE_BASE || (API_BASE ? API_BASE.replace(/\/v1\/api\/?$/, "") : "");
+
+const getImageUrl = (imagePath: string | null | undefined) => {
+  if (!imagePath) return "";
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    return imagePath;
+  }
+  return `${IMAGE_BASE}${imagePath}`;
+};
 
 export default function Home() {
   const { isUnlocked, login, logout, isLoading: authLoading } = useAuth();
@@ -102,11 +110,34 @@ export default function Home() {
   const pinRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const [activeTab, setActiveTab] = useState("projects");
+  const [searchQuery, setSearchQuery] = useState("");
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareItem, setShareItem] = useState<CardItem | null>(null);
   const [shareType, setShareType] = useState<
     "projects" | "mobile-app" | "software" | "digital-card" | "marketing-clients" | "figma-designs" | null
   >(null);
+
+  const getSearchPlaceholder = () => {
+    switch (activeTab) {
+      case "projects": return "Search projects by title, description or language...";
+      case "mobile-app": return "Search mobile apps by title, description or language...";
+      case "software": return "Search software by title, description or language...";
+      case "digital-card": return "Search digital cards by title or description...";
+      case "marketing-clients": return "Search marketing clients by title or description...";
+      case "figma-designs": return "Search Figma designs by title...";
+      default: return "Search...";
+    }
+  };
+
+  const matchesSearch = (item: any) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase().trim();
+    return (
+      (item.title && item.title.toLowerCase().includes(query)) ||
+      (item.description && item.description.toLowerCase().includes(query)) ||
+      (item.language && item.language.toLowerCase().includes(query))
+    );
+  };
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [mobileApps, setMobileApps] = useState<MobileApp[]>([]);
@@ -124,7 +155,7 @@ export default function Home() {
   const [expandedCredentials, setExpandedCredentials] = useState<Set<string>>(
     new Set(),
   );
-const [visibleCredentials, setVisibleCredentials] = useState<Set<string>>(new Set());
+  const [visibleCredentials, setVisibleCredentials] = useState<Set<string>>(new Set());
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [dataError, setDataError] = useState("");
 
@@ -155,7 +186,7 @@ const [visibleCredentials, setVisibleCredentials] = useState<Set<string>>(new Se
           axios.get(`${API_BASE}/software`, { timeout: 10000 }).catch((err) => {
             console.error("Software API Error:", err);
             throw new Error("Failed to load software");
-          }), 
+          }),
           axios
             .get(`${API_BASE}/digital-cards`, { timeout: 10000 })
             .catch((err) => {
@@ -259,11 +290,11 @@ const [visibleCredentials, setVisibleCredentials] = useState<Set<string>>(new Se
     }
     setVisiblePasswords(newSet);
   };
-const toggleCredentials = (id: string) => {
-  const updated = new Set(visibleCredentials);
-  updated.has(id) ? updated.delete(id) : updated.add(id);
-  setVisibleCredentials(updated);
-};
+  const toggleCredentials = (id: string) => {
+    const updated = new Set(visibleCredentials);
+    updated.has(id) ? updated.delete(id) : updated.add(id);
+    setVisibleCredentials(updated);
+  };
   const tabs = [
     {
       key: "projects",
@@ -337,9 +368,9 @@ const toggleCredentials = (id: string) => {
     const url =
       shareType === "mobile-app"
         ? (shareItem as MobileApp).androidLink ||
-          (shareItem as MobileApp).iosLink ||
-          (shareItem as any).link ||
-          ""
+        (shareItem as MobileApp).iosLink ||
+        (shareItem as any).link ||
+        ""
         : (shareItem as any).link || "";
     if (!url) {
       alert("Invalid URL");
@@ -389,22 +420,21 @@ const toggleCredentials = (id: string) => {
       | "digital-card"
       | "marketing-clients",
   ) => {
-    const hasCredentials = (type === "projects" || type === "software") && 
-      (item as Project | Software).credentials && 
+    const hasCredentials = (type === "projects" || type === "software") &&
+      (item as Project | Software).credentials &&
       (item as Project | Software).credentials!.length > 0;
     const isExpanded = hasCredentials && visibleCredentials.has(item._id);
-    
+
     return (
       <div
         key={item._id}
-        className={`bg-white/70 backdrop-blur-md rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 flex flex-col border border-white/30 ${
-          isExpanded ? 'min-h-[600px]' : 'min-h-[450px]'
-        }`}
+        className={`bg-white/70 backdrop-blur-md rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 flex flex-col border border-white/30 ${isExpanded ? 'min-h-[600px]' : 'min-h-[450px]'
+          }`}
       >
         {item.image && (
           <div className="w-full h-56 bg-white flex items-center justify-center">
             <img
-              src={`${IMAGE_BASE}${item.image}`}
+              src={getImageUrl(item.image)}
               alt={(item as any).title || ""}
               className="w-full h-full object-contain transition-transform duration-300 hover:scale-105 p-2"
               onError={(e) => {
@@ -426,102 +456,102 @@ const toggleCredentials = (id: string) => {
                 {(item as Project | MobileApp | Software).language}
               </span>
             )}
-          
-   {(type === "projects" || type === "software") && 
-    (item as Project | Software).credentials && 
-    (item as Project | Software).credentials!.length > 0 && (
-  <div className="mt-2">
-    <button
-      onClick={() => toggleCredentials(item._id)}
-      className="flex items-center gap-2 px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg border border-gray-200 transition-all font-medium"
-    >
-      {visibleCredentials.has(item._id) ? (
-        <>
-          <FiChevronUp size={14} />
-          Hide Credentials
-        </>
-      ) : (
-        <>
-          <FiChevronDown size={14} />
-          Show Credentials ({(item as Project | Software).credentials!.length})
-        </>
-      )}
-    </button>
 
-    {visibleCredentials.has(item._id) && (
-      <div className="bg-gray-50 rounded-xl p-3 space-y-3 border border-gray-200 mt-2 animate-[slideDown_0.3s_ease-out] max-h-64 overflow-y-auto">
-        {(item as Project | Software).credentials!.map((cred, idx) => (
-          <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200 space-y-2">
-            {cred.role && (
-              <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-2 pb-2 border-b border-gray-200">
-                {cred.role}
-              </div>
-            )}
-            
-            <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">
-                Email
-              </label>
-              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-2">
-                <code className="flex-1 text-xs font-mono text-gray-800 break-all">
-                  {cred.email}
-                </code>
+          {(type === "projects" || type === "software") &&
+            (item as Project | Software).credentials &&
+            (item as Project | Software).credentials!.length > 0 && (
+              <div className="mt-2">
                 <button
-                  className="text-gray-500 hover:text-gray-700 transition flex-shrink-0"
-                  onClick={() => {
-                    navigator.clipboard.writeText(cred.email);
-                    alert("Email copied!");
-                  }}
-                  title="Copy email"
+                  onClick={() => toggleCredentials(item._id)}
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg border border-gray-200 transition-all font-medium"
                 >
-                  <FiCopy size={14} />
+                  {visibleCredentials.has(item._id) ? (
+                    <>
+                      <FiChevronUp size={14} />
+                      Hide Credentials
+                    </>
+                  ) : (
+                    <>
+                      <FiChevronDown size={14} />
+                      Show Credentials ({(item as Project | Software).credentials!.length})
+                    </>
+                  )}
                 </button>
-              </div>
-            </div>
 
-            {cred.password && (
-              <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">
-                  Password
-                </label>
-                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-2">
-                  <code className="flex-1 text-xs font-mono text-gray-800 break-all">
-                    {visiblePasswords.has(`${item._id}-${idx}`)
-                      ? cred.password
-                      : "•".repeat(cred.password.length)}
-                  </code>
+                {visibleCredentials.has(item._id) && (
+                  <div className="bg-gray-50 rounded-xl p-3 space-y-3 border border-gray-200 mt-2 animate-[slideDown_0.3s_ease-out] max-h-64 overflow-y-auto">
+                    {(item as Project | Software).credentials!.map((cred, idx) => (
+                      <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200 space-y-2">
+                        {cred.role && (
+                          <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-2 pb-2 border-b border-gray-200">
+                            {cred.role}
+                          </div>
+                        )}
 
-                  <button
-                    className="text-gray-500 hover:text-gray-700 transition flex-shrink-0"
-                    onClick={() => togglePasswordVisibility(`${item._id}-${idx}`)}
-                    title="Toggle password"
-                  >
-                    {visiblePasswords.has(`${item._id}-${idx}`) ? (
-                      <FiEyeOff size={14} />
-                    ) : (
-                      <FiEye size={14} />
-                    )}
-                  </button>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">
+                            Email
+                          </label>
+                          <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-2">
+                            <code className="flex-1 text-xs font-mono text-gray-800 break-all">
+                              {cred.email}
+                            </code>
+                            <button
+                              className="text-gray-500 hover:text-gray-700 transition flex-shrink-0"
+                              onClick={() => {
+                                navigator.clipboard.writeText(cred.email);
+                                alert("Email copied!");
+                              }}
+                              title="Copy email"
+                            >
+                              <FiCopy size={14} />
+                            </button>
+                          </div>
+                        </div>
 
-                  <button
-                    className="text-gray-500 hover:text-gray-700 transition flex-shrink-0"
-                    onClick={() => {
-                      navigator.clipboard.writeText(cred.password);
-                      alert("Password copied!");
-                    }}
-                    title="Copy password"
-                  >
-                    <FiCopy size={14} />
-                  </button>
-                </div>
+                        {cred.password && (
+                          <div>
+                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">
+                              Password
+                            </label>
+                            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-2">
+                              <code className="flex-1 text-xs font-mono text-gray-800 break-all">
+                                {visiblePasswords.has(`${item._id}-${idx}`)
+                                  ? cred.password
+                                  : "•".repeat(cred.password.length)}
+                              </code>
+
+                              <button
+                                className="text-gray-500 hover:text-gray-700 transition flex-shrink-0"
+                                onClick={() => togglePasswordVisibility(`${item._id}-${idx}`)}
+                                title="Toggle password"
+                              >
+                                {visiblePasswords.has(`${item._id}-${idx}`) ? (
+                                  <FiEyeOff size={14} />
+                                ) : (
+                                  <FiEye size={14} />
+                                )}
+                              </button>
+
+                              <button
+                                className="text-gray-500 hover:text-gray-700 transition flex-shrink-0"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(cred.password);
+                                  alert("Password copied!");
+                                }}
+                                title="Copy password"
+                              >
+                                <FiCopy size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-)}
 
           <div className="flex gap-2 mt-2">
             {type === "mobile-app" ? (
@@ -598,7 +628,7 @@ const toggleCredentials = (id: string) => {
         <title>Portfolio Dashboard</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      
+
 
       {!isUnlocked && (
         <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-500 to-gray-900 p-5">
@@ -764,9 +794,9 @@ const toggleCredentials = (id: string) => {
                 value={
                   (shareType === "mobile-app"
                     ? (shareItem as any).androidLink ||
-                      (shareItem as any).iosLink ||
-                      (shareItem as any).link ||
-                      ""
+                    (shareItem as any).iosLink ||
+                    (shareItem as any).link ||
+                    ""
                     : (shareItem as any).link || "") || ""
                 }
                 className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-700"
@@ -827,18 +857,32 @@ const toggleCredentials = (id: string) => {
                 {tabs.map((t) => (
                   <button
                     key={t.key}
-                    className={`px-6 py-2 rounded-xl cursor-pointer text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
-                      t.key === activeTab
+                    className={`px-6 py-2 rounded-xl cursor-pointer text-sm font-semibold transition-all duration-300 whitespace-nowrap ${t.key === activeTab
                         ? "bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-lg"
                         : "bg-white border-2 border-gray-300 text-gray-700 hover:bg-gradient-to-b hover:from-gray-900 hover:to-gray-800 hover:text-white hover:border-gray-900 hover:-translate-y-0.5"
-                    }`}
-                    onClick={() => setActiveTab(t.key)}
+                      }`}
+                    onClick={() => {
+                      setActiveTab(t.key);
+                      setSearchQuery("");
+                    }}
                   >
                     {t.label}
                   </button>
                 ))}
               </div>
             </div>
+
+            {!isLoadingData && (
+              <div className="mb-8 max-w-md">
+                <input
+                  type="text"
+                  placeholder={getSearchPlaceholder()}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full border-2 border-gray-300 bg-white/70 backdrop-blur-md px-5 py-3 rounded-2xl focus:outline-none focus:border-gray-900 transition-all shadow-md text-gray-900 font-medium"
+                />
+              </div>
+            )}
 
             {isLoadingData && (
               <div className="flex flex-col items-center justify-center min-h-[300px] gap-5">
@@ -855,31 +899,28 @@ const toggleCredentials = (id: string) => {
                   <div className="w-full">
                     <div className="flex gap-2 mb-4">
                       <button
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                          websiteType === "ecommerce"
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${websiteType === "ecommerce"
                             ? "bg-gray-900 text-white"
                             : "bg-white border border-gray-300 text-gray-700"
-                        }`}
+                          }`}
                         onClick={() => setWebsiteType("ecommerce")}
                       >
                         Ecommerce Website
                       </button>
                       <button
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                          websiteType === "informative"
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${websiteType === "informative"
                             ? "bg-gray-900 text-white"
                             : "bg-white border border-gray-300 text-gray-700"
-                        }`}
+                          }`}
                         onClick={() => setWebsiteType("informative")}
                       >
                         Informative Website
                       </button>
                       <button
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                          websiteType === "innovation"
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${websiteType === "innovation"
                             ? "bg-gray-900 text-white"
                             : "bg-white border border-gray-300 text-gray-700"
-                        }`}
+                          }`}
                         onClick={() => setWebsiteType("innovation")}
                       >
                         Innovation Website
@@ -888,7 +929,7 @@ const toggleCredentials = (id: string) => {
                     {projects.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
                         {projects
-                          .filter((p) => p.type === websiteType)
+                          .filter((p) => p.type === websiteType && matchesSearch(p))
                           .map((p) => renderCard(p, "projects"))}
                       </div>
                     ) : (
@@ -903,7 +944,9 @@ const toggleCredentials = (id: string) => {
                   <div className="w-full">
                     {mobileApps.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-                        {mobileApps.map((app) => renderCard(app, "mobile-app"))}
+                        {mobileApps
+                          .filter(matchesSearch)
+                          .map((app) => renderCard(app, "mobile-app"))}
                       </div>
                     ) : (
                       <div className="text-center py-20 text-gray-600">
@@ -919,7 +962,9 @@ const toggleCredentials = (id: string) => {
                   <div className="w-full">
                     {software.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-                        {software.map((sw) => renderCard(sw, "software"))}
+                        {software
+                          .filter(matchesSearch)
+                          .map((sw) => renderCard(sw, "software"))}
                       </div>
                     ) : (
                       <div className="text-center py-20 text-gray-600">
@@ -933,9 +978,11 @@ const toggleCredentials = (id: string) => {
                   <div className="w-full">
                     {digitalCards.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-                        {digitalCards.map((card) =>
-                          renderCard(card, "digital-card"),
-                        )}
+                        {digitalCards
+                          .filter(matchesSearch)
+                          .map((card) =>
+                            renderCard(card, "digital-card"),
+                          )}
                       </div>
                     ) : (
                       <div className="text-center py-20 text-gray-600">
@@ -951,9 +998,11 @@ const toggleCredentials = (id: string) => {
                   <div className="w-full">
                     {marketingClients.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-                        {marketingClients.map((mc) =>
-                          renderCard(mc, "marketing-clients"),
-                        )}
+                        {marketingClients
+                          .filter(matchesSearch)
+                          .map((mc) =>
+                            renderCard(mc, "marketing-clients"),
+                          )}
                       </div>
                     ) : (
                       <div className="text-center py-20 text-gray-600">
@@ -969,31 +1018,28 @@ const toggleCredentials = (id: string) => {
                   <div className="w-full">
                     <div className="flex gap-2 mb-4">
                       <button
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                          figmaType === "application"
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${figmaType === "application"
                             ? "bg-gray-900 text-white"
                             : "bg-white border border-gray-300 text-gray-700"
-                        }`}
+                          }`}
                         onClick={() => setFigmaType("application")}
                       >
                         Application
                       </button>
                       <button
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                          figmaType === "web"
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${figmaType === "web"
                             ? "bg-gray-900 text-white"
                             : "bg-white border border-gray-300 text-gray-700"
-                        }`}
+                          }`}
                         onClick={() => setFigmaType("web")}
                       >
                         Web
                       </button>
                       <button
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                          figmaType === "saas-dashboard"
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${figmaType === "saas-dashboard"
                             ? "bg-gray-900 text-white"
                             : "bg-white border border-gray-300 text-gray-700"
-                        }`}
+                          }`}
                         onClick={() => setFigmaType("saas-dashboard")}
                       >
                         SaaS Dashboard
@@ -1006,40 +1052,41 @@ const toggleCredentials = (id: string) => {
                             if (!fg.type) return true;
                             return fg.type === figmaType;
                           })
+                          .filter(matchesSearch)
                           .map((fg) => (
-                          <div
-                            key={fg._id}
-                            className="bg-white/70 backdrop-blur-md rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 flex flex-col border border-white/30 min-h-[350px]"
-                          >
-                            {fg.image && (
-                              <div className="w-full h-56 bg-white flex items-center justify-center">
-                                <img
-                                  src={`${IMAGE_BASE}${fg.image}`}
-                                  alt={fg.title || "Figma Design"}
-                                  className="w-full h-full object-contain transition-transform duration-300 hover:scale-105 p-2"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display =
-                                      "none";
-                                  }}
-                                />
-                              </div>
-                            )}
-                            <div className="p-6 flex flex-col gap-3 flex-1">
-                              <h3 className="text-xl font-bold text-gray-900 leading-tight">
-                                {fg.title || "Figma Design"}
-                              </h3>
-                              <div className="flex gap-2 mt-2">
-                                <button
-                                  className="flex-1 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all bg-gradient-to-b from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 shadow-md"
-                                  onClick={() => window.open(fg.link, "_blank")}
-                                  title="Open Figma"
-                                >
-                                  Open Figma
-                                </button>
+                            <div
+                              key={fg._id}
+                              className="bg-white/70 backdrop-blur-md rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 flex flex-col border border-white/30 min-h-[350px]"
+                            >
+                              {fg.image && (
+                                <div className="w-full h-56 bg-white flex items-center justify-center">
+                                  <img
+                                    src={getImageUrl(fg.image)}
+                                    alt={fg.title || "Figma Design"}
+                                    className="w-full h-full object-contain transition-transform duration-300 hover:scale-105 p-2"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).style.display =
+                                        "none";
+                                    }}
+                                  />
+                                </div>
+                              )}
+                              <div className="p-6 flex flex-col gap-3 flex-1">
+                                <h3 className="text-xl font-bold text-gray-900 leading-tight">
+                                  {fg.title || "Figma Design"}
+                                </h3>
+                                <div className="flex gap-2 mt-2">
+                                  <button
+                                    className="flex-1 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all bg-gradient-to-b from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 shadow-md"
+                                    onClick={() => window.open(fg.link, "_blank")}
+                                    title="Open Figma"
+                                  >
+                                    Open Figma
+                                  </button>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     ) : (
                       <div className="text-center py-20 text-gray-600">
